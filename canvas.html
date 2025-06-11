@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+      }
+
+      canvas {
+        border: 2px solid #333;
+        background-color: white;
+        display: block;
+        margin: 20px auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .container {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .controls {
+        margin: 20px 0;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <canvas id="myCanvas" width="200" height="100"></canvas>
+      <div class="controls">
+        <button onclick="drawText()">draw</button>
+        <button onclick="clearCanvas()">clean</button>
+        <button onclick="drawMultipleTexts()">draw multiple</button>
+      </div>
+    </div>
+
+    <script>
+      // 获取 canvas 元素和上下文
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+      const textPosition = {
+        x: 20,
+        y: 20,
+        width: 0,
+        height: 24,
+        rotate: 0,
+      };
+      const setCanvasSetting = (ctx) => {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "#333";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+      };
+
+      // 绘制文本的函数
+      function drawText() {
+        clearCanvas();
+
+        const text = "Hello Canvas!";
+        const textMetrics = ctx.measureText(text);
+        textPosition.width = textMetrics.width;
+
+        ctx.save();
+
+        ctx.translate(
+          textPosition.x + textPosition.width / 2,
+          textPosition.y + textPosition.height / 2
+        );
+
+        ctx.rotate(textPosition.rotate);
+
+        ctx.fillText(text, -textPosition.width / 2, -textPosition.height / 2);
+
+        ctx.restore();
+      }
+
+      // 清空画布的函数
+      function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // 绘制多行文本的函数
+
+      // 页面加载时绘制初始文本
+      window.onload = function () {
+        setCanvasSetting(ctx);
+
+        drawText();
+      };
+
+      const isPositionInText = (x, y) => {
+        // 計算文本中心點
+        const centerX = textPosition.x + textPosition.width / 2;
+        const centerY = textPosition.y + textPosition.height / 2;
+
+        // 將點擊座標轉換為相對於中心點的座標
+        const relativeX = x - centerX;
+        const relativeY = y - centerY;
+
+        // 應用逆旋轉變換
+        const cos = Math.cos(-textPosition.rotate);
+        const sin = Math.sin(-textPosition.rotate);
+
+        const transformedX = relativeX * cos - relativeY * sin;
+        const transformedY = relativeX * sin + relativeY * cos;
+
+        // 在本地座標系中檢測
+        const halfWidth = textPosition.width / 2;
+        const halfHeight = textPosition.height / 2;
+
+        return (
+          Math.abs(transformedX) <= halfWidth &&
+          Math.abs(transformedY) <= halfHeight
+        );
+      };
+
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (isPositionInText(x, y)) {
+          textPosition.rotate += 1;
+          drawText();
+        }
+      });
+    </script>
+  </body>
+</html>
